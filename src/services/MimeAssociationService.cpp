@@ -8,6 +8,28 @@
 #include <QSet>
 #include <algorithm>
 
+namespace {
+QString firstInstalledId(const QStringList &candidates,
+                         const AppRegistry *registry) {
+  for (const QString &id : candidates) {
+    if (!id.isEmpty() && registry->findById(id)) {
+      return id;
+    }
+  }
+
+  return QString();
+}
+
+void addInstalled(QSet<QString> &target, const QStringList &candidates,
+                  const AppRegistry *registry) {
+  for (const QString &id : candidates) {
+    if (!id.isEmpty() && registry->findById(id)) {
+      target.insert(id);
+    }
+  }
+}
+} // namespace
+
 MimeAssociationService::MimeAssociationService(AppRegistry *registry,
                                                MimeDefaultsStore *store)
     : m_registry(registry), m_store(store) {}
@@ -35,14 +57,12 @@ QVector<MimeEntry> MimeAssociationService::buildEntries() const {
 
     QString defaultId;
     const QStringList userList = userDefaults.value(entry.mimeType);
-
     if (!userList.isEmpty()) {
-      defaultId = userList.first();
+      defaultId = firstInstalledId(userList, m_registry);
     } else {
       const QStringList sysList = systemDefaults.value(entry.mimeType);
-
       if (!sysList.isEmpty()) {
-        defaultId = sysList.first();
+        defaultId = firstInstalledId(sysList, m_registry);
       }
     }
     entry.defaultAppId = defaultId;
@@ -55,14 +75,10 @@ QVector<MimeEntry> MimeAssociationService::buildEntries() const {
     }
 
     const QStringList userExtra = userAssoc.value(entry.mimeType);
-    for (const QString &id : userExtra) {
-      assoc.insert(id);
-    }
+    addInstalled(assoc, userExtra, m_registry);
 
     const QStringList sysExtra = systemAssoc.value(entry.mimeType);
-    for (const QString &id : sysExtra) {
-      assoc.insert(id);
-    }
+    addInstalled(assoc, sysExtra, m_registry);
 
     if (!defaultId.isEmpty()) {
       assoc.insert(defaultId);

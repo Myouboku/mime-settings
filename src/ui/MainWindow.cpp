@@ -66,11 +66,13 @@ void MainWindow::buildUi() {
   m_table->setModel(m_proxy);
 
   m_table->horizontalHeader()->setSectionResizeMode(
-      MimeTypeModel::MimeColumn, QHeaderView::ResizeToContents);
+      MimeTypeModel::MimeColumn, QHeaderView::Interactive);
   m_table->horizontalHeader()->setSectionResizeMode(
-      MimeTypeModel::DefaultAppColumn, QHeaderView::ResizeToContents);
+      MimeTypeModel::DefaultAppColumn, QHeaderView::Interactive);
   m_table->horizontalHeader()->setSectionResizeMode(
       MimeTypeModel::DescriptionColumn, QHeaderView::Stretch);
+  m_table->setColumnWidth(MimeTypeModel::MimeColumn, 240);
+  m_table->setColumnWidth(MimeTypeModel::DefaultAppColumn, 220);
 
   connect(m_search, &QLineEdit::textChanged, m_proxy,
           &MimeTypeFilterProxy::setFilterText);

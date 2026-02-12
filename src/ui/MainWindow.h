@@ -11,7 +11,7 @@ class DetailsPane;
 class MimeTypeModel;
 class MimeTypeFilterProxy;
 class QLineEdit;
-class QTableView;
+class QTreeView;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -27,6 +27,7 @@ private:
   void buildUi();
   void loadData(const QString &preserveMime = QString());
   void selectMime(const QString &mime);
+  void selectFirstEntry();
 
   AppRegistry m_registry;
   MimeDefaultsStore m_store;
@@ -35,6 +36,6 @@ private:
   MimeTypeModel *m_model;
   MimeTypeFilterProxy *m_proxy;
   QLineEdit *m_search;
-  QTableView *m_table;
+  QTreeView *m_table;
   DetailsPane *m_details;
 };

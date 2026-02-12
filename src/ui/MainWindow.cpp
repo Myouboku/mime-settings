@@ -10,7 +10,7 @@
 #include <QLineEdit>
 #include <QSplitter>
 #include <QStatusBar>
-#include <QTableView>
+#include <QTreeView>
 #include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -35,15 +35,17 @@ void MainWindow::buildUi() {
   m_search = new QLineEdit(leftPane);
   m_search->setPlaceholderText("Search MIME types or applications");
 
-  m_table = new QTableView(leftPane);
+  m_table = new QTreeView(leftPane);
   m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_table->setSelectionMode(QAbstractItemView::SingleSelection);
   m_table->setAlternatingRowColors(true);
   m_table->setSortingEnabled(true);
-  m_table->verticalHeader()->setVisible(false);
-  m_table->horizontalHeader()->setStretchLastSection(false);
-  m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+  m_table->header()->setStretchLastSection(false);
+  m_table->header()->setSectionResizeMode(QHeaderView::Interactive);
   m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_table->setRootIsDecorated(true);
+  m_table->setItemsExpandable(true);
+  m_table->setExpandsOnDoubleClick(true);
 
   leftLayout->addWidget(m_search);
   leftLayout->addWidget(m_table, 1);
@@ -65,17 +67,22 @@ void MainWindow::buildUi() {
   m_proxy->sort(MimeTypeModel::MimeColumn, Qt::AscendingOrder);
   m_table->setModel(m_proxy);
 
-  m_table->horizontalHeader()->setSectionResizeMode(
+  m_table->header()->setSectionResizeMode(
       MimeTypeModel::MimeColumn, QHeaderView::Interactive);
-  m_table->horizontalHeader()->setSectionResizeMode(
+  m_table->header()->setSectionResizeMode(
       MimeTypeModel::DefaultAppColumn, QHeaderView::Interactive);
-  m_table->horizontalHeader()->setSectionResizeMode(
+  m_table->header()->setSectionResizeMode(
       MimeTypeModel::DescriptionColumn, QHeaderView::Stretch);
   m_table->setColumnWidth(MimeTypeModel::MimeColumn, 240);
   m_table->setColumnWidth(MimeTypeModel::DefaultAppColumn, 220);
 
-  connect(m_search, &QLineEdit::textChanged, m_proxy,
-          &MimeTypeFilterProxy::setFilterText);
+  connect(m_search, &QLineEdit::textChanged, this,
+          [this](const QString &text) {
+            m_proxy->setFilterText(text);
+            if (!text.trimmed().isEmpty()) {
+              m_table->expandAll();
+            }
+          });
   connect(m_table->selectionModel(), &QItemSelectionModel::selectionChanged,
           this, &MainWindow::onSelectionChanged);
   connect(m_details, &DetailsPane::requestSetDefault, this,
@@ -88,7 +95,7 @@ void MainWindow::buildUi() {
       "QLineEdit { background: #ffffff; border: 1px solid #cfd4da; "
       "border-radius: 6px; "
       "padding: 6px 10px; }"
-      "QTableView { background: #ffffff; border: 1px solid #d6dbe0; "
+      "QTreeView { background: #ffffff; border: 1px solid #d6dbe0; "
       "border-radius: 8px; "
       "gridline-color: #e7eaee; }"
       "QHeaderView::section { background: #f6f7f9; padding: 6px; border: none; "
@@ -111,25 +118,53 @@ void MainWindow::loadData(const QString &preserveMime) {
   if (!preserveMime.isEmpty()) {
     selectMime(preserveMime);
   } else if (m_proxy->rowCount() > 0) {
-    m_table->selectRow(0);
+    selectFirstEntry();
   } else {
     m_details->setEntry(MimeEntry{});
   }
 }
 
 void MainWindow::selectMime(const QString &mime) {
-  const int sourceRow = m_model->rowForMime(mime);
-
-  if (sourceRow < 0) {
-    return;
-  }
-
-  const QModelIndex sourceIndex = m_model->index(sourceRow, 0);
+  const QModelIndex sourceIndex = m_model->indexForMime(mime);
   const QModelIndex proxyIndex = m_proxy->mapFromSource(sourceIndex);
 
   if (proxyIndex.isValid()) {
-    m_table->selectRow(proxyIndex.row());
+    if (proxyIndex.parent().isValid()) {
+      m_table->expand(proxyIndex.parent());
+    }
+    m_table->setCurrentIndex(proxyIndex);
+    m_table->selectionModel()->select(
+        proxyIndex,
+        QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    m_table->scrollTo(proxyIndex);
   }
+}
+
+void MainWindow::selectFirstEntry() {
+  for (int i = 0; i < m_proxy->rowCount(); ++i) {
+    const QModelIndex categoryIndex = m_proxy->index(i, 0);
+    if (!categoryIndex.isValid()) {
+      continue;
+    }
+
+    const int childCount = m_proxy->rowCount(categoryIndex);
+    if (childCount == 0) {
+      continue;
+    }
+
+    m_table->expand(categoryIndex);
+    const QModelIndex firstChild = m_proxy->index(0, 0, categoryIndex);
+    if (firstChild.isValid()) {
+      m_table->setCurrentIndex(firstChild);
+      m_table->selectionModel()->select(
+          firstChild,
+          QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+      m_table->scrollTo(firstChild);
+      return;
+    }
+  }
+
+  m_details->setEntry(MimeEntry{});
 }
 
 void MainWindow::onSelectionChanged() {
@@ -142,7 +177,7 @@ void MainWindow::onSelectionChanged() {
 
   const QModelIndex proxyIndex = selection.first();
   const QModelIndex sourceIndex = m_proxy->mapToSource(proxyIndex);
-  const MimeEntry entry = m_model->entryAt(sourceIndex.row());
+  const MimeEntry entry = m_model->entryForIndex(sourceIndex);
   m_details->setEntry(entry);
 }
 

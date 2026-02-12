@@ -25,8 +25,20 @@ bool MimeTypeFilterProxy::filterAcceptsRow(
     return true;
   }
 
-  const QModelIndex mimeIndex =
+  const QModelIndex rowIndex =
       sourceModel()->index(sourceRow, MimeTypeModel::MimeColumn, sourceParent);
+  if (!rowIndex.isValid()) {
+    return false;
+  }
+
+  const int childCount = sourceModel()->rowCount(rowIndex);
+  for (int i = 0; i < childCount; ++i) {
+    if (filterAcceptsRow(i, rowIndex)) {
+      return true;
+    }
+  }
+
+  const QModelIndex mimeIndex = rowIndex;
   const QModelIndex defaultIndex = sourceModel()->index(
       sourceRow, MimeTypeModel::DefaultAppColumn, sourceParent);
   const QModelIndex descIndex = sourceModel()->index(

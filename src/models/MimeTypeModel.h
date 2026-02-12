@@ -1,6 +1,8 @@
 #pragma once
 
-#include <QAbstractTableModel>
+#include <QAbstractItemModel>
+#include <QHash>
+#include <QPair>
 #include <QString>
 #include <QVariant>
 #include <QVector>
@@ -9,7 +11,7 @@
 
 class AppRegistry;
 
-class MimeTypeModel : public QAbstractTableModel {
+class MimeTypeModel : public QAbstractItemModel {
   Q_OBJECT
 
 public:
@@ -24,15 +26,26 @@ public:
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+  QModelIndex index(int row, int column,
+                    const QModelIndex &parent = QModelIndex()) const override;
+  QModelIndex parent(const QModelIndex &child) const override;
   QVariant data(const QModelIndex &index, int role) const override;
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role) const override;
 
   void setEntries(const QVector<MimeEntry> &entries);
-  MimeEntry entryAt(int row) const;
-  int rowForMime(const QString &mime) const;
+  MimeEntry entryForIndex(const QModelIndex &index) const;
+  QModelIndex indexForMime(const QString &mime) const;
 
 private:
+  struct CategoryNode {
+    QString name;
+    QVector<MimeEntry> entries;
+  };
+
+  bool isCategoryIndex(const QModelIndex &index) const;
+
   AppRegistry *m_registry;
-  QVector<MimeEntry> m_entries;
+  QVector<CategoryNode> m_categories;
+  QHash<QString, QPair<int, int>> m_lookup;
 };

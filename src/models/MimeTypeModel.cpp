@@ -3,7 +3,8 @@
 #include "services/AppRegistry.h"
 
 #include <QFont>
-#include <QMap>
+#include <QStringList>
+#include <algorithm>
 
 MimeTypeModel::MimeTypeModel(AppRegistry *registry, QObject *parent)
     : QAbstractItemModel(parent), m_registry(registry) {}
@@ -154,7 +155,7 @@ void MimeTypeModel::setEntries(const QVector<MimeEntry> &entries) {
   m_categories.clear();
   m_lookup.clear();
 
-  QMap<QString, QVector<MimeEntry>> grouped;
+  QHash<QString, QVector<MimeEntry>> grouped;
 
   for (const MimeEntry &entry : entries) {
     QString category = entry.mimeType.section('/', 0, 0);
@@ -164,10 +165,16 @@ void MimeTypeModel::setEntries(const QVector<MimeEntry> &entries) {
     grouped[category].append(entry);
   }
 
-  for (auto it = grouped.cbegin(); it != grouped.cend(); ++it) {
+  QStringList categories = grouped.keys();
+  std::sort(categories.begin(), categories.end(),
+            [](const QString &a, const QString &b) {
+              return QString::localeAwareCompare(a, b) < 0;
+            });
+
+  for (const QString &category : categories) {
     CategoryNode node;
-    node.name = it.key();
-    node.entries = it.value();
+    node.name = category;
+    node.entries = grouped.value(category);
     m_categories.append(node);
   }
 

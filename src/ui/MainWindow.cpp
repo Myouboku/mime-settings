@@ -75,6 +75,9 @@ void MainWindow::buildUi() {
       MimeTypeModel::DescriptionColumn, QHeaderView::Stretch);
   m_table->setColumnWidth(MimeTypeModel::MimeColumn, 240);
   m_table->setColumnWidth(MimeTypeModel::DefaultAppColumn, 220);
+  m_table->header()->setSortIndicator(MimeTypeModel::MimeColumn,
+                                      Qt::AscendingOrder);
+  m_table->sortByColumn(MimeTypeModel::MimeColumn, Qt::AscendingOrder);
 
   connect(m_search, &QLineEdit::textChanged, this,
           [this](const QString &text) {
@@ -114,6 +117,7 @@ void MainWindow::buildUi() {
 void MainWindow::loadData(const QString &preserveMime) {
   const QVector<MimeEntry> entries = m_service.buildEntries();
   m_model->setEntries(entries);
+  m_table->sortByColumn(MimeTypeModel::MimeColumn, Qt::AscendingOrder);
 
   if (!preserveMime.isEmpty()) {
     selectMime(preserveMime);

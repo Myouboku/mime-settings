@@ -9,8 +9,14 @@ MimeTypeFilterProxy::MimeTypeFilterProxy(QObject *parent)
 }
 
 void MimeTypeFilterProxy::setFilterText(const QString &text) {
-  m_filter = text.trimmed();
-  invalidateFilter();
+  const QString trimmed = text.trimmed();
+  if (m_filter == trimmed) {
+    return;
+  }
+
+  beginFilterChange();
+  m_filter = trimmed;
+  endFilterChange();
 }
 
 bool MimeTypeFilterProxy::filterAcceptsRow(

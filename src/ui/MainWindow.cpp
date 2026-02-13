@@ -486,6 +486,8 @@ void MainWindow::applyTheme() {
   const QString hoverBg = blendColors(accentColor, QColor(surface0), 0.22).name();
   const QString selectionBg = theme->dark ? accentColor.darker(135).name() : accentHex;
   const QString selectionText = theme->dark ? text : base;
+  const QString groupHeaderBg =
+      theme->dark ? QColor(surface0).darker(115).name() : QColor(surface0).lighter(110).name();
 
   QString style;
   style += QString("QMainWindow { background: qlineargradient(x1:0, y1:0, x2:1, "
@@ -520,6 +522,7 @@ void MainWindow::applyTheme() {
                .arg(surface1, surface2, subtext1);
   style += QString("QTreeView::item { padding: 6px 8px; }\n");
   style += QString("QTreeView::item:alternate { background: %1; }\n").arg(surface1);
+  style += QString("QTreeView::item:has-children { background: %1; }\n").arg(groupHeaderBg);
   style += QString("QTreeView::item:selected { background: %1; color: %2; }\n")
                .arg(selectionBg, selectionText);
   style += QString("QListWidget::item:selected { background: %1; color: %2; "

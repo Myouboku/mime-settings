@@ -1,9 +1,9 @@
 #pragma once
 
+#include "services/MimeAssociationService.h"
+
 #include <QString>
 #include <QWidget>
-
-#include "services/MimeAssociationService.h"
 
 class AppRegistry;
 class QLabel;

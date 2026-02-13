@@ -4,10 +4,12 @@
 
 #include <QFont>
 #include <QStringList>
+
 #include <algorithm>
 
 MimeTypeModel::MimeTypeModel(AppRegistry *registry, QObject *parent)
-    : QAbstractItemModel(parent), m_registry(registry) {}
+    : QAbstractItemModel(parent), m_registry(registry) {
+}
 
 int MimeTypeModel::rowCount(const QModelIndex &parent) const {
   if (!parent.isValid()) {
@@ -31,8 +33,7 @@ int MimeTypeModel::columnCount(const QModelIndex &parent) const {
   return ColumnCount;
 }
 
-QModelIndex MimeTypeModel::index(int row, int column,
-                                 const QModelIndex &parent) const {
+QModelIndex MimeTypeModel::index(int row, int column, const QModelIndex &parent) const {
   if (row < 0 || column < 0 || column >= ColumnCount) {
     return QModelIndex();
   }
@@ -133,8 +134,7 @@ QVariant MimeTypeModel::data(const QModelIndex &index, int role) const {
   return QVariant();
 }
 
-QVariant MimeTypeModel::headerData(int section, Qt::Orientation orientation,
-                                   int role) const {
+QVariant MimeTypeModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (role != Qt::DisplayRole || orientation != Qt::Horizontal) {
     return QVariant();
   }
@@ -166,10 +166,9 @@ void MimeTypeModel::setEntries(const QVector<MimeEntry> &entries) {
   }
 
   QStringList categories = grouped.keys();
-  std::sort(categories.begin(), categories.end(),
-            [](const QString &a, const QString &b) {
-              return QString::localeAwareCompare(a, b) < 0;
-            });
+  std::sort(categories.begin(), categories.end(), [](const QString &a, const QString &b) {
+    return QString::localeAwareCompare(a, b) < 0;
+  });
 
   for (const QString &category : categories) {
     CategoryNode node;

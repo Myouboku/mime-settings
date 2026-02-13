@@ -43,7 +43,8 @@ Test commands
   - Single test by regex: `ctest --test-dir build -R <regex>`
 
 Lint/format commands
-- No lint or format targets are defined in this repo today.
+- Format: `make format` (runs clang-format on `src/**/*.h` and `src/**/*.cpp`).
+- Direct: `clang-format -i <files>` (uses `.clang-format` at repo root).
 - `.clangd` removes `-mno-direct-extern-access` for tooling only.
 - If adding formatting, prefer `clang-format` but do not reformat
   unrelated files without request.

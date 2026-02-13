@@ -1,13 +1,13 @@
 #pragma once
 
+#include "services/AppRegistry.h"
+#include "services/MimeAssociationService.h"
+#include "services/MimeDefaultsStore.h"
+
 #include <QHash>
 #include <QMainWindow>
 #include <QString>
 #include <QVector>
-
-#include "services/AppRegistry.h"
-#include "services/MimeAssociationService.h"
-#include "services/MimeDefaultsStore.h"
 
 class DetailsPane;
 class MimeTypeModel;
@@ -27,7 +27,7 @@ private slots:
   void onRequestSetDefault(const QString &mime, const QString &desktopId);
 
 private:
- void buildUi();
+  void buildUi();
   void loadPalette();
   void loadAppearanceSettings();
   void saveAppearanceSettings() const;
@@ -58,8 +58,7 @@ private:
 
   const ThemeData *currentTheme() const;
   const ThemeColor *currentAccent(const ThemeData &theme) const;
-  QString colorFor(const ThemeData &theme, const QString &id,
-                   const QString &fallback) const;
+  QString colorFor(const ThemeData &theme, const QString &id, const QString &fallback) const;
 
   AppRegistry m_registry;
   MimeDefaultsStore m_store;

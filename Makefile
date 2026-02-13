@@ -1,7 +1,7 @@
 BUILD_DIR ?= build
 BUILD_TYPE ?= Release
 
-.PHONY: all configure configure-debug build clean run
+.PHONY: all configure configure-debug build clean run format
 
 all: build
 
@@ -19,3 +19,8 @@ clean:
 
 run: build
 	./$(BUILD_DIR)/mime-settings
+
+FORMAT_FILES := $(shell find src -type f \( -name '*.cpp' -o -name '*.h' \))
+
+format:
+	clang-format -i $(FORMAT_FILES)

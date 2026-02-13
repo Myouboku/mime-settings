@@ -70,8 +70,7 @@ void AppRegistry::load() {
 
   const QStringList appDirs = XdgPaths::appDirs();
   for (const QString &dir : appDirs) {
-    QDirIterator it(dir, QStringList() << "*.desktop", QDir::Files,
-                    QDirIterator::Subdirectories);
+    QDirIterator it(dir, QStringList() << "*.desktop", QDir::Files, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {
       const QString filePath = it.next();
@@ -110,10 +109,11 @@ QStringList AppRegistry::appsForMime(const QString &mime) const {
   return m_mimeToApps.value(mime);
 }
 
-QList<AppInfo> AppRegistry::allApps() const { return m_apps.values(); }
+QList<AppInfo> AppRegistry::allApps() const {
+  return m_apps.values();
+}
 
-void AppRegistry::indexDesktopFile(const QString &filePath,
-                                   const QString &baseDir) {
+void AppRegistry::indexDesktopFile(const QString &filePath, const QString &baseDir) {
   const QString desktopId = desktopIdForFile(filePath, baseDir);
 
   if (desktopId.isEmpty() || m_apps.contains(desktopId)) {
@@ -124,8 +124,7 @@ void AppRegistry::indexDesktopFile(const QString &filePath,
   settings.beginGroup("Desktop Entry");
 
   const QString type = settings.value("Type").toString().trimmed();
-  if (!type.isEmpty() &&
-      type.compare("Application", Qt::CaseInsensitive) != 0) {
+  if (!type.isEmpty() && type.compare("Application", Qt::CaseInsensitive) != 0) {
     return;
   }
 
@@ -169,8 +168,7 @@ void AppRegistry::indexDesktopFile(const QString &filePath,
   }
 }
 
-QString AppRegistry::desktopIdForFile(const QString &filePath,
-                                      const QString &baseDir) const {
+QString AppRegistry::desktopIdForFile(const QString &filePath, const QString &baseDir) const {
   QDir dir(baseDir);
   QString relative = dir.relativeFilePath(filePath);
 

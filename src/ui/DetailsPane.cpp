@@ -73,8 +73,7 @@ DetailsPane::DetailsPane(AppRegistry *registry, QWidget *parent)
 
   connect(m_associations, &QListWidget::itemSelectionChanged, this,
           &DetailsPane::updateButtonState);
-  connect(m_setDefault, &QPushButton::clicked, this,
-          &DetailsPane::onSetDefaultClicked);
+  connect(m_setDefault, &QPushButton::clicked, this, &DetailsPane::onSetDefaultClicked);
 }
 
 void DetailsPane::setEntry(const MimeEntry &entry) {
@@ -85,8 +84,7 @@ void DetailsPane::setEntry(const MimeEntry &entry) {
     m_description->setText("Pick a row on the left to view details.");
   } else {
     m_title->setText(entry.mimeType);
-    m_description->setText(entry.description.isEmpty() ? "No description"
-                                                       : entry.description);
+    m_description->setText(entry.description.isEmpty() ? "No description" : entry.description);
   }
 
   updateDefaultDisplay();
@@ -106,8 +104,7 @@ void DetailsPane::updateDefaultDisplay() {
   m_defaultName->setText(name);
 
   const QString iconName = app ? app->iconName : QString();
-  QIcon icon = QIcon::fromTheme(iconName.isEmpty() ? "application-x-executable"
-                                                   : iconName);
+  QIcon icon = QIcon::fromTheme(iconName.isEmpty() ? "application-x-executable" : iconName);
   m_defaultIcon->setPixmap(icon.pixmap(32, 32));
 }
 
@@ -161,8 +158,7 @@ void DetailsPane::updateButtonState() {
   }
 
   const QString selectedId = item->data(Qt::UserRole).toString();
-  const bool canSet =
-      !selectedId.isEmpty() && selectedId != m_entry.defaultAppId;
+  const bool canSet = !selectedId.isEmpty() && selectedId != m_entry.defaultAppId;
   m_setDefault->setEnabled(canSet);
 }
 

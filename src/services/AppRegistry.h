@@ -25,8 +25,7 @@ public:
 
 private:
   void indexDesktopFile(const QString &filePath, const QString &baseDir);
-  QString desktopIdForFile(const QString &filePath,
-                           const QString &baseDir) const;
+  QString desktopIdForFile(const QString &filePath, const QString &baseDir) const;
 
   QHash<QString, AppInfo> m_apps;
   QHash<QString, QStringList> m_mimeToApps;

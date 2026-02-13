@@ -12,8 +12,7 @@ public:
   void setFilterText(const QString &text);
 
 protected:
-  bool filterAcceptsRow(int sourceRow,
-                        const QModelIndex &sourceParent) const override;
+  bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
 private:
   QString m_filter;

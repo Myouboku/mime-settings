@@ -11,8 +11,8 @@
 #include <QDir>
 #include <QFile>
 #include <QFont>
-#include <QHeaderView>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QIcon>
 #include <QItemSelectionModel>
 #include <QJsonDocument>
@@ -21,9 +21,9 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPainter>
+#include <QPair>
 #include <QPen>
 #include <QPixmap>
-#include <QPair>
 #include <QSettings>
 #include <QSignalBlocker>
 #include <QSplitter>
@@ -53,16 +53,14 @@ QIcon makeAccentIcon(const QColor &color) {
 QColor blendColors(const QColor &top, const QColor &bottom, double alpha) {
   alpha = std::clamp(alpha, 0.0, 1.0);
   auto mix = [alpha](int topValue, int bottomValue) -> int {
-    return static_cast<int>(
-        std::round(bottomValue + (topValue - bottomValue) * alpha));
+    return static_cast<int>(std::round(bottomValue + (topValue - bottomValue) * alpha));
   };
   return QColor(mix(top.red(), bottom.red()), mix(top.green(), bottom.green()),
                 mix(top.blue(), bottom.blue()));
 }
-}
+} // namespace
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), m_service(&m_registry, &m_store) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_service(&m_registry, &m_store) {
   m_registry.load();
   m_store.reload();
   loadPalette();
@@ -166,66 +164,59 @@ void MainWindow::buildUi() {
   m_proxy->sort(MimeTypeModel::MimeColumn, Qt::AscendingOrder);
   m_table->setModel(m_proxy);
 
-  m_table->header()->setSectionResizeMode(
-      MimeTypeModel::MimeColumn, QHeaderView::Interactive);
-  m_table->header()->setSectionResizeMode(
-      MimeTypeModel::DefaultAppColumn, QHeaderView::Interactive);
-  m_table->header()->setSectionResizeMode(
-      MimeTypeModel::DescriptionColumn, QHeaderView::Stretch);
+  m_table->header()->setSectionResizeMode(MimeTypeModel::MimeColumn, QHeaderView::Interactive);
+  m_table->header()->setSectionResizeMode(MimeTypeModel::DefaultAppColumn,
+                                          QHeaderView::Interactive);
+  m_table->header()->setSectionResizeMode(MimeTypeModel::DescriptionColumn, QHeaderView::Stretch);
   m_table->setColumnWidth(MimeTypeModel::MimeColumn, 240);
   m_table->setColumnWidth(MimeTypeModel::DefaultAppColumn, 220);
-  m_table->header()->setSortIndicator(MimeTypeModel::MimeColumn,
-                                      Qt::AscendingOrder);
+  m_table->header()->setSortIndicator(MimeTypeModel::MimeColumn, Qt::AscendingOrder);
   m_table->sortByColumn(MimeTypeModel::MimeColumn, Qt::AscendingOrder);
 
-  connect(m_search, &QLineEdit::textChanged, this,
-          [this](const QString &text) {
-            m_proxy->setFilterText(text);
-            if (!text.trimmed().isEmpty()) {
-              m_table->expandAll();
-            }
-          });
-  connect(m_table->selectionModel(), &QItemSelectionModel::selectionChanged,
-          this, &MainWindow::onSelectionChanged);
-  connect(m_details, &DetailsPane::requestSetDefault, this,
-          &MainWindow::onRequestSetDefault);
+  connect(m_search, &QLineEdit::textChanged, this, [this](const QString &text) {
+    m_proxy->setFilterText(text);
+    if (!text.trimmed().isEmpty()) {
+      m_table->expandAll();
+    }
+  });
+  connect(m_table->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+          &MainWindow::onSelectionChanged);
+  connect(m_details, &DetailsPane::requestSetDefault, this, &MainWindow::onRequestSetDefault);
 
   populateThemePicker();
   populateAccentPicker();
   applyTheme();
 
-  connect(m_themePicker, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this, [this](int) {
-            if (m_updatingAppearance) {
-              return;
-            }
+  connect(m_themePicker, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
+    if (m_updatingAppearance) {
+      return;
+    }
 
-            const QString themeId = m_themePicker->currentData().toString();
-            if (themeId.isEmpty() || themeId == m_currentThemeId) {
-              return;
-            }
+    const QString themeId = m_themePicker->currentData().toString();
+    if (themeId.isEmpty() || themeId == m_currentThemeId) {
+      return;
+    }
 
-            m_currentThemeId = themeId;
-            populateAccentPicker();
-            applyTheme();
-            saveAppearanceSettings();
-          });
+    m_currentThemeId = themeId;
+    populateAccentPicker();
+    applyTheme();
+    saveAppearanceSettings();
+  });
 
-  connect(m_accentPicker, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this, [this](int) {
-            if (m_updatingAppearance) {
-              return;
-            }
+  connect(m_accentPicker, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
+    if (m_updatingAppearance) {
+      return;
+    }
 
-            const QString accentId = m_accentPicker->currentData().toString();
-            if (accentId.isEmpty() || accentId == m_currentAccentId) {
-              return;
-            }
+    const QString accentId = m_accentPicker->currentData().toString();
+    if (accentId.isEmpty() || accentId == m_currentAccentId) {
+      return;
+    }
 
-            m_currentAccentId = accentId;
-            applyTheme();
-            saveAppearanceSettings();
-          });
+    m_currentAccentId = accentId;
+    applyTheme();
+    saveAppearanceSettings();
+  });
 }
 
 void MainWindow::loadPalette() {
@@ -263,8 +254,7 @@ void MainWindow::loadPalette() {
     theme.order = themeObj.value("order").toInt(0);
 
     QJsonObject colorsObj = themeObj.value("colors").toObject();
-    for (auto colorIt = colorsObj.begin(); colorIt != colorsObj.end();
-         ++colorIt) {
+    for (auto colorIt = colorsObj.begin(); colorIt != colorsObj.end(); ++colorIt) {
       if (!colorIt.value().isObject()) {
         continue;
       }
@@ -284,18 +274,15 @@ void MainWindow::loadPalette() {
     }
 
     std::sort(theme.accents.begin(), theme.accents.end(),
-              [](const ThemeColor &a, const ThemeColor &b) {
-                return a.order < b.order;
-              });
+              [](const ThemeColor &a, const ThemeColor &b) { return a.order < b.order; });
 
     m_themes.insert(theme.id, theme);
     order.append({theme.order, theme.id});
   }
 
-  std::sort(order.begin(), order.end(),
-            [](const QPair<int, QString> &a, const QPair<int, QString> &b) {
-              return a.first < b.first;
-            });
+  std::sort(
+      order.begin(), order.end(),
+      [](const QPair<int, QString> &a, const QPair<int, QString> &b) { return a.first < b.first; });
 
   for (const auto &pair : order) {
     m_themeOrder.append(pair.second);
@@ -308,8 +295,8 @@ void MainWindow::loadPalette() {
     fallback.dark = true;
     fallback.order = 0;
 
-    auto addColor = [&fallback](const QString &id, const QString &name,
-                                const QString &hex, bool accent, int order) {
+    auto addColor = [&fallback](const QString &id, const QString &name, const QString &hex,
+                                bool accent, int order) {
       ThemeColor color;
       color.id = id;
       color.name = name;
@@ -337,9 +324,7 @@ void MainWindow::loadPalette() {
     addColor("mauve", "Mauve", "#cba6f7", true, 0);
 
     std::sort(fallback.accents.begin(), fallback.accents.end(),
-              [](const ThemeColor &a, const ThemeColor &b) {
-                return a.order < b.order;
-              });
+              [](const ThemeColor &a, const ThemeColor &b) { return a.order < b.order; });
 
     m_themes.insert(fallback.id, fallback);
     m_themeOrder.append(fallback.id);
@@ -349,20 +334,16 @@ void MainWindow::loadPalette() {
 void MainWindow::loadAppearanceSettings() {
   const QString fallbackTheme = m_themes.contains("mocha")
                                     ? QString("mocha")
-                                    : (m_themeOrder.isEmpty()
-                                           ? QString()
-                                           : m_themeOrder.first());
+                                    : (m_themeOrder.isEmpty() ? QString() : m_themeOrder.first());
   const QString fallbackAccent = "mauve";
 
   QSettings settings(settingsFilePath(), QSettings::IniFormat);
-  m_currentThemeId =
-      settings.value("appearance/theme", fallbackTheme).toString();
+  m_currentThemeId = settings.value("appearance/theme", fallbackTheme).toString();
   if (!m_themes.contains(m_currentThemeId)) {
     m_currentThemeId = fallbackTheme;
   }
 
-  m_currentAccentId =
-      settings.value("appearance/accent", fallbackAccent).toString();
+  m_currentAccentId = settings.value("appearance/accent", fallbackAccent).toString();
 }
 
 void MainWindow::saveAppearanceSettings() const {
@@ -452,8 +433,7 @@ const MainWindow::ThemeData *MainWindow::currentTheme() const {
   return nullptr;
 }
 
-const MainWindow::ThemeColor *MainWindow::currentAccent(
-    const ThemeData &theme) const {
+const MainWindow::ThemeColor *MainWindow::currentAccent(const ThemeData &theme) const {
   auto it = theme.colors.constFind(m_currentAccentId);
   if (it != theme.colors.constEnd()) {
     return &it.value();
@@ -503,113 +483,81 @@ void MainWindow::applyTheme() {
   const QString accentHex = accentColor.name();
   const QString accentHover = accentColor.lighter(112).name();
   const QString accentPressed = accentColor.darker(110).name();
-  const QString hoverBg =
-      blendColors(accentColor, QColor(surface0), 0.22).name();
-  const QString selectionBg =
-      theme->dark ? accentColor.darker(135).name() : accentHex;
+  const QString hoverBg = blendColors(accentColor, QColor(surface0), 0.22).name();
+  const QString selectionBg = theme->dark ? accentColor.darker(135).name() : accentHex;
   const QString selectionText = theme->dark ? text : base;
 
   QString style;
-  style += QString(
-               "QMainWindow { background: qlineargradient(x1:0, y1:0, x2:1, "
-               "y2:1, stop:0 %1, stop:1 %2); }\n")
+  style += QString("QMainWindow { background: qlineargradient(x1:0, y1:0, x2:1, "
+                   "y2:1, stop:0 %1, stop:1 %2); }\n")
                .arg(mantle, base);
   style += QString("QWidget { color: %1; }\n").arg(text);
-  style += QString(
-               "#AppHeader { background: %1; border: 1px solid %2; "
-               "border-radius: 12px; }\n")
+  style += QString("#AppHeader { background: %1; border: 1px solid %2; "
+                   "border-radius: 12px; }\n")
                .arg(surface0, surface1);
   style += QString("#HeaderTitle { color: %1; }\n").arg(text);
   style += QString("#HeaderLabel { color: %1; }\n").arg(subtext0);
-  style += QString(
-               "QStatusBar { background: %1; color: %2; border-top: 1px solid "
-               "%3; }\n")
+  style += QString("QStatusBar { background: %1; color: %2; border-top: 1px solid "
+                   "%3; }\n")
                .arg(mantle, subtext1, surface1);
-  style += QString(
-               "QLineEdit, QComboBox { background: %1; border: 1px solid %2; "
-               "border-radius: 8px; padding: 6px 10px; }\n")
+  style += QString("QLineEdit, QComboBox { background: %1; border: 1px solid %2; "
+                   "border-radius: 8px; padding: 6px 10px; }\n")
                .arg(surface0, surface1);
-  style += QString(
-               "QLineEdit:focus, QComboBox:focus { border: 1px solid %1; }\n")
-               .arg(accentHex);
-  style +=
-      QString("QLineEdit::placeholder { color: %1; }\n").arg(subtext0);
-  style += QString(
-               "QComboBox::drop-down { border-left: 1px solid %1; "
-               "width: 22px; }\n")
+  style += QString("QLineEdit:focus, QComboBox:focus { border: 1px solid %1; }\n").arg(accentHex);
+  style += QString("QLineEdit::placeholder { color: %1; }\n").arg(subtext0);
+  style += QString("QComboBox::drop-down { border-left: 1px solid %1; "
+                   "width: 22px; }\n")
                .arg(surface1);
-  style += QString(
-               "QComboBox QAbstractItemView { background: %1; border: 1px "
-               "solid %2; selection-background-color: %3; "
-               "selection-color: %4; }\n")
+  style += QString("QComboBox QAbstractItemView { background: %1; border: 1px "
+                   "solid %2; selection-background-color: %3; "
+                   "selection-color: %4; }\n")
                .arg(surface0, surface1, accentHex, selectionText);
-  style += QString(
-               "QTreeView, QListWidget, DetailsPane { background: %1; border: "
-               "1px solid %2; border-radius: 12px; gridline-color: %3; }\n")
+  style += QString("QTreeView, QListWidget, DetailsPane { background: %1; border: "
+                   "1px solid %2; border-radius: 12px; gridline-color: %3; }\n")
                .arg(surface0, surface1, surface2);
-  style += QString(
-               "QHeaderView::section { background: %1; padding: 6px; border: "
-               "none; border-bottom: 1px solid %2; color: %3; }\n")
+  style += QString("QHeaderView::section { background: %1; padding: 6px; border: "
+                   "none; border-bottom: 1px solid %2; color: %3; }\n")
                .arg(surface1, surface2, subtext1);
-  style +=
-      QString("QTreeView::item { padding: 6px 8px; }\n");
-  style += QString("QTreeView::item:alternate { background: %1; }\n")
-               .arg(surface1);
-  style += QString(
-               "QTreeView::item:selected { background: %1; color: %2; }\n")
+  style += QString("QTreeView::item { padding: 6px 8px; }\n");
+  style += QString("QTreeView::item:alternate { background: %1; }\n").arg(surface1);
+  style += QString("QTreeView::item:selected { background: %1; color: %2; }\n")
                .arg(selectionBg, selectionText);
-  style += QString(
-               "QListWidget::item:selected { background: %1; color: %2; "
-               "border-radius: 6px; }\n")
+  style += QString("QListWidget::item:selected { background: %1; color: %2; "
+                   "border-radius: 6px; }\n")
                .arg(selectionBg, selectionText);
-  style += QString(
-               "QTreeView::item:hover, QListWidget::item:hover { background: "
-               "%1; }\n")
+  style += QString("QTreeView::item:hover, QListWidget::item:hover { background: "
+                   "%1; }\n")
                .arg(hoverBg);
   style += QString("QListWidget::item:hover { border-radius: 6px; }\n");
-  style += QString(
-               "QListWidget::item { padding: 6px; margin: 2px 4px; }\n");
-  style += QString(
-               "QPushButton { background: %1; color: %2; border: none; "
-               "border-radius: 8px; padding: 8px 16px; font-weight: 600; }\n")
+  style += QString("QListWidget::item { padding: 6px; margin: 2px 4px; }\n");
+  style += QString("QPushButton { background: %1; color: %2; border: none; "
+                   "border-radius: 8px; padding: 8px 16px; font-weight: 600; }\n")
                .arg(accentHex, selectionText);
-  style += QString("QPushButton:hover { background: %1; }\n")
-               .arg(accentHover);
-  style += QString("QPushButton:pressed { background: %1; }\n")
-               .arg(accentPressed);
-  style += QString(
-               "QPushButton:disabled { background: %1; color: %2; }\n")
-               .arg(surface2, overlay2);
-  style += QString(
-               "QSplitter::handle { background: %1; }\n")
-               .arg(surface2);
-  style += QString(
-               "QScrollBar:vertical { background: %1; width: 12px; margin: 0; "
-               "} QScrollBar::handle:vertical { background: %2; min-height: "
-               "24px; border-radius: 6px; } "
-               "QScrollBar::handle:vertical:hover { background: %3; } "
-               "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { "
-               "height: 0; }\n")
+  style += QString("QPushButton:hover { background: %1; }\n").arg(accentHover);
+  style += QString("QPushButton:pressed { background: %1; }\n").arg(accentPressed);
+  style += QString("QPushButton:disabled { background: %1; color: %2; }\n").arg(surface2, overlay2);
+  style += QString("QSplitter::handle { background: %1; }\n").arg(surface2);
+  style += QString("QScrollBar:vertical { background: %1; width: 12px; margin: 0; "
+                   "} QScrollBar::handle:vertical { background: %2; min-height: "
+                   "24px; border-radius: 6px; } "
+                   "QScrollBar::handle:vertical:hover { background: %3; } "
+                   "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { "
+                   "height: 0; }\n")
                .arg(surface0, surface2, overlay1);
-  style += QString(
-               "QScrollBar:horizontal { background: %1; height: 12px; margin: "
-               "0; } QScrollBar::handle:horizontal { background: %2; "
-               "min-width: 24px; border-radius: 6px; } "
-               "QScrollBar::handle:horizontal:hover { background: %3; } "
-               "QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal "
-               "{ width: 0; }\n")
+  style += QString("QScrollBar:horizontal { background: %1; height: 12px; margin: "
+                   "0; } QScrollBar::handle:horizontal { background: %2; "
+                   "min-width: 24px; border-radius: 6px; } "
+                   "QScrollBar::handle:horizontal:hover { background: %3; } "
+                   "QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal "
+                   "{ width: 0; }\n")
                .arg(surface0, surface2, overlay1);
-  style += QString(
-               "QToolTip { background: %1; color: %2; border: 1px solid %3; "
-               "border-radius: 6px; padding: 6px 8px; }\n")
+  style += QString("QToolTip { background: %1; color: %2; border: 1px solid %3; "
+                   "border-radius: 6px; padding: 6px 8px; }\n")
                .arg(surface0, text, surface1);
   style += QString("QLabel#DetailsTitle { color: %1; }\n").arg(text);
-  style += QString("QLabel#DetailsDescription { color: %1; }\n")
-               .arg(subtext1);
+  style += QString("QLabel#DetailsDescription { color: %1; }\n").arg(subtext1);
   style += QString("QLabel#DetailsHint { color: %1; }\n").arg(subtext0);
-  style += QString(
-               "QLabel#SectionLabel { color: %1; font-weight: 600; }\n")
-               .arg(subtext0);
+  style += QString("QLabel#SectionLabel { color: %1; font-weight: 600; }\n").arg(subtext0);
 
   setStyleSheet(style);
 }
@@ -637,9 +585,8 @@ void MainWindow::selectMime(const QString &mime) {
       m_table->expand(proxyIndex.parent());
     }
     m_table->setCurrentIndex(proxyIndex);
-    m_table->selectionModel()->select(
-        proxyIndex,
-        QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    m_table->selectionModel()->select(proxyIndex, QItemSelectionModel::ClearAndSelect |
+                                                      QItemSelectionModel::Rows);
     m_table->scrollTo(proxyIndex);
   }
 }
@@ -660,9 +607,8 @@ void MainWindow::selectFirstEntry() {
     const QModelIndex firstChild = m_proxy->index(0, 0, categoryIndex);
     if (firstChild.isValid()) {
       m_table->setCurrentIndex(firstChild);
-      m_table->selectionModel()->select(
-          firstChild,
-          QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+      m_table->selectionModel()->select(firstChild, QItemSelectionModel::ClearAndSelect |
+                                                        QItemSelectionModel::Rows);
       m_table->scrollTo(firstChild);
       return;
     }
@@ -685,8 +631,7 @@ void MainWindow::onSelectionChanged() {
   m_details->setEntry(entry);
 }
 
-void MainWindow::onRequestSetDefault(const QString &mime,
-                                     const QString &desktopId) {
+void MainWindow::onRequestSetDefault(const QString &mime, const QString &desktopId) {
   m_service.setDefault(mime, desktopId);
   statusBar()->showMessage(QString("Default updated for %1").arg(mime), 3000);
   loadData(mime);

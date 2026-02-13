@@ -6,11 +6,11 @@
 #include <QMimeDatabase>
 #include <QMimeType>
 #include <QSet>
+
 #include <algorithm>
 
 namespace {
-QString firstInstalledId(const QStringList &candidates,
-                         const AppRegistry *registry) {
+QString firstInstalledId(const QStringList &candidates, const AppRegistry *registry) {
   for (const QString &id : candidates) {
     if (!id.isEmpty() && registry->findById(id)) {
       return id;
@@ -30,17 +30,16 @@ void addInstalled(QSet<QString> &target, const QStringList &candidates,
 }
 } // namespace
 
-MimeAssociationService::MimeAssociationService(AppRegistry *registry,
-                                               MimeDefaultsStore *store)
-    : m_registry(registry), m_store(store) {}
+MimeAssociationService::MimeAssociationService(AppRegistry *registry, MimeDefaultsStore *store)
+    : m_registry(registry), m_store(store) {
+}
 
 QVector<MimeEntry> MimeAssociationService::buildEntries() const {
   QMimeDatabase db;
   QList<QMimeType> types = db.allMimeTypes();
-  std::sort(types.begin(), types.end(),
-            [](const QMimeType &a, const QMimeType &b) {
-              return QString::localeAwareCompare(a.name(), b.name()) < 0;
-            });
+  std::sort(types.begin(), types.end(), [](const QMimeType &a, const QMimeType &b) {
+    return QString::localeAwareCompare(a.name(), b.name()) < 0;
+  });
 
   const QHash<QString, QStringList> userDefaults = m_store->userDefaults();
   const QHash<QString, QStringList> systemDefaults = m_store->systemDefaults();
@@ -103,13 +102,12 @@ QVector<MimeEntry> MimeAssociationService::buildEntries() const {
     }
 
     QStringList assocList = assoc.values();
-    std::sort(assocList.begin(), assocList.end(),
-              [this](const QString &a, const QString &b) {
-                const QString nameA = m_registry->appDisplayName(a);
-                const QString nameB = m_registry->appDisplayName(b);
-                const int cmp = QString::localeAwareCompare(nameA, nameB);
-                return cmp == 0 ? a < b : cmp < 0;
-              });
+    std::sort(assocList.begin(), assocList.end(), [this](const QString &a, const QString &b) {
+      const QString nameA = m_registry->appDisplayName(a);
+      const QString nameB = m_registry->appDisplayName(b);
+      const int cmp = QString::localeAwareCompare(nameA, nameB);
+      return cmp == 0 ? a < b : cmp < 0;
+    });
     entry.associatedAppIds = assocList;
 
     entries.append(entry);
@@ -130,7 +128,6 @@ MimeEntry MimeAssociationService::entryFor(const QString &mime) const {
   return MimeEntry{};
 }
 
-void MimeAssociationService::setDefault(const QString &mime,
-                                        const QString &desktopId) {
+void MimeAssociationService::setDefault(const QString &mime, const QString &desktopId) {
   m_store->setUserDefault(mime, desktopId);
 }

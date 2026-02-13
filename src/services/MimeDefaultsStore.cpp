@@ -22,8 +22,7 @@ QHash<QString, QStringList> parseSectionEntries(const QString &filePath,
     const QString line = in.readLine();
     const QString trimmed = line.trimmed();
 
-    if (trimmed.isEmpty() || trimmed.startsWith('#') ||
-        trimmed.startsWith(';')) {
+    if (trimmed.isEmpty() || trimmed.startsWith('#') || trimmed.startsWith(';')) {
       continue;
     }
 
@@ -138,8 +137,7 @@ QHash<QString, QStringList> MimeDefaultsStore::systemAssociations() const {
   return m_systemAssociations;
 }
 
-void MimeDefaultsStore::setUserDefault(const QString &mime,
-                                       const QString &desktopId) {
+void MimeDefaultsStore::setUserDefault(const QString &mime, const QString &desktopId) {
   const QString filePath = userMimeappsPath();
   QFileInfo info(filePath);
   QDir().mkpath(info.absolutePath());
@@ -184,8 +182,7 @@ void MimeDefaultsStore::setUserDefault(const QString &mime,
       continue;
     }
 
-    if (trimmed.isEmpty() || trimmed.startsWith('#') ||
-        trimmed.startsWith(';')) {
+    if (trimmed.isEmpty() || trimmed.startsWith('#') || trimmed.startsWith(';')) {
       continue;
     }
 

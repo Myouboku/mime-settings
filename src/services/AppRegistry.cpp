@@ -4,8 +4,65 @@
 
 #include <QDir>
 #include <QDirIterator>
+#include <QFile>
 #include <QFileInfo>
 #include <QSettings>
+#include <QTextStream>
+
+namespace {
+QStringList parseMimeTypesFromDesktopFile(const QString &filePath) {
+  QFile file(filePath);
+  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return {};
+  }
+
+  QTextStream in(&file);
+  bool inDesktopEntry = false;
+  while (!in.atEnd()) {
+    const QString line = in.readLine();
+    const QString trimmed = line.trimmed();
+
+    if (trimmed.isEmpty() || trimmed.startsWith('#') || trimmed.startsWith(';')) {
+      continue;
+    }
+
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      const QString section = trimmed.mid(1, trimmed.size() - 2).trimmed();
+      inDesktopEntry = (section.compare("Desktop Entry", Qt::CaseInsensitive) == 0);
+      continue;
+    }
+
+    if (!inDesktopEntry) {
+      continue;
+    }
+
+    const int eq = trimmed.indexOf('=');
+    if (eq <= 0) {
+      continue;
+    }
+
+    const QString key = trimmed.left(eq).trimmed();
+    if (key.compare("MimeType", Qt::CaseInsensitive) != 0) {
+      continue;
+    }
+
+    const QString value = trimmed.mid(eq + 1).trimmed();
+    const QStringList items = value.split(';', Qt::SkipEmptyParts);
+    QStringList cleaned;
+
+    for (const QString &item : items) {
+      const QString part = item.trimmed();
+      if (!part.isEmpty()) {
+        cleaned.append(part);
+      }
+    }
+
+    return cleaned;
+  }
+
+  return {};
+}
+} // namespace
 
 void AppRegistry::load() {
   m_apps.clear();
@@ -85,13 +142,16 @@ void AppRegistry::indexDesktopFile(const QString &filePath,
   app.exec = settings.value("Exec").toString().trimmed();
   app.iconName = settings.value("Icon").toString().trimmed();
 
-  const QString mimeValue = settings.value("MimeType").toString();
-  const QStringList mimeParts = mimeValue.split(';', Qt::SkipEmptyParts);
-  for (const QString &part : mimeParts) {
-    const QString trimmed = part.trimmed();
+  app.mimeTypes = parseMimeTypesFromDesktopFile(filePath);
+  if (app.mimeTypes.isEmpty()) {
+    const QString mimeValue = settings.value("MimeType").toString();
+    const QStringList mimeParts = mimeValue.split(';', Qt::SkipEmptyParts);
+    for (const QString &part : mimeParts) {
+      const QString trimmed = part.trimmed();
 
-    if (!trimmed.isEmpty()) {
-      app.mimeTypes.append(trimmed);
+      if (!trimmed.isEmpty()) {
+        app.mimeTypes.append(trimmed);
+      }
     }
   }
 

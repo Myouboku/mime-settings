@@ -68,10 +68,28 @@ QVector<MimeEntry> MimeAssociationService::buildEntries() const {
     entry.defaultAppId = defaultId;
 
     QSet<QString> assoc;
-    const QStringList registryApps = m_registry->appsForMime(entry.mimeType);
+    QSet<QString> mimeKeys;
+    mimeKeys.insert(entry.mimeType);
 
-    for (const QString &id : registryApps) {
-      assoc.insert(id);
+    const QStringList aliases = type.aliases();
+    for (const QString &alias : aliases) {
+      if (!alias.isEmpty()) {
+        mimeKeys.insert(alias);
+      }
+    }
+
+    const QStringList ancestors = type.allAncestors();
+    for (const QString &ancestor : ancestors) {
+      if (!ancestor.isEmpty()) {
+        mimeKeys.insert(ancestor);
+      }
+    }
+
+    for (const QString &mimeKey : mimeKeys) {
+      const QStringList registryApps = m_registry->appsForMime(mimeKey);
+      for (const QString &id : registryApps) {
+        assoc.insert(id);
+      }
     }
 
     const QStringList userExtra = userAssoc.value(entry.mimeType);

@@ -13,6 +13,10 @@ configure-debug:
 
 build: configure
 	cmake --build $(BUILD_DIR)
+	sudo mkdir -p /opt/mime-settings
+	sudo cp $(BUILD_DIR)/mime-settings /opt/mime-settings/
+	sudo cp mime-settings.desktop /usr/share/applications/
+	sudo update-desktop-database /usr/share/applications
 
 clean:
 	cmake --build $(BUILD_DIR) --target clean

@@ -126,6 +126,7 @@ void MainWindow::buildUi() {
   m_search->setPlaceholderText("Search MIME types or applications");
   m_search->setObjectName("SearchField");
   m_search->setClearButtonEnabled(true);
+  m_search->setFocus();
 
   m_table = new QTreeView(leftPane);
   m_table->setObjectName("MimeTable");

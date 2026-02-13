@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/assets">
+    <file alias="palette.json">palette.json</file>
+  </qresource>
+</RCC>

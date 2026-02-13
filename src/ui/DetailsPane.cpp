@@ -15,25 +15,31 @@
 DetailsPane::DetailsPane(AppRegistry *registry, QWidget *parent)
     : QWidget(parent), m_registry(registry) {
   m_title = new QLabel(this);
+  m_title->setObjectName("DetailsTitle");
   QFont titleFont = m_title->font();
   titleFont.setPointSize(titleFont.pointSize() + 3);
   titleFont.setBold(true);
   m_title->setFont(titleFont);
 
   m_description = new QLabel(this);
+  m_description->setObjectName("DetailsDescription");
   m_description->setWordWrap(true);
 
   m_defaultIcon = new QLabel(this);
+  m_defaultIcon->setObjectName("DefaultIcon");
   m_defaultIcon->setFixedSize(32, 32);
   m_defaultIcon->setScaledContents(true);
 
   m_defaultName = new QLabel(this);
+  m_defaultName->setObjectName("DefaultName");
   m_defaultName->setWordWrap(true);
 
   m_associations = new QListWidget(this);
+  m_associations->setObjectName("AssociationsList");
   m_associations->setSelectionMode(QAbstractItemView::SingleSelection);
 
   m_emptyHint = new QLabel("No associated applications", this);
+  m_emptyHint->setObjectName("DetailsHint");
   QFont hintFont = m_emptyHint->font();
   hintFont.setItalic(true);
   m_emptyHint->setFont(hintFont);
@@ -50,10 +56,14 @@ DetailsPane::DetailsPane(AppRegistry *registry, QWidget *parent)
   layout->addWidget(m_title);
   layout->addWidget(m_description);
   layout->addSpacing(8);
-  layout->addWidget(new QLabel("Default application", this));
+  auto *defaultLabel = new QLabel("Default application", this);
+  defaultLabel->setObjectName("SectionLabel");
+  layout->addWidget(defaultLabel);
   layout->addLayout(defaultRow);
   layout->addSpacing(12);
-  layout->addWidget(new QLabel("Associated applications", this));
+  auto *associatedLabel = new QLabel("Associated applications", this);
+  associatedLabel->setObjectName("SectionLabel");
+  layout->addWidget(associatedLabel);
   layout->addWidget(m_associations, 1);
   layout->addWidget(m_emptyHint);
   layout->addSpacing(8);

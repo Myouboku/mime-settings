@@ -14,6 +14,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
 
 add_executable(mime-settings
   src/main.cpp
+  src/assets/assets.qrc
   src/ui/MainWindow.cpp
   src/ui/MainWindow.h
   src/ui/DetailsPane.cpp

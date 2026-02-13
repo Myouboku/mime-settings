@@ -32,6 +32,7 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <cmath>
 
 namespace {
 QIcon makeAccentIcon(const QColor &color) {
@@ -47,6 +48,16 @@ QIcon makeAccentIcon(const QColor &color) {
   painter.drawEllipse(QRectF(1, 1, 12, 12));
 
   return QIcon(pixmap);
+}
+
+QColor blendColors(const QColor &top, const QColor &bottom, double alpha) {
+  alpha = std::clamp(alpha, 0.0, 1.0);
+  auto mix = [alpha](int topValue, int bottomValue) -> int {
+    return static_cast<int>(
+        std::round(bottomValue + (topValue - bottomValue) * alpha));
+  };
+  return QColor(mix(top.red(), bottom.red()), mix(top.green(), bottom.green()),
+                mix(top.blue(), bottom.blue()));
 }
 }
 
@@ -492,11 +503,11 @@ void MainWindow::applyTheme() {
   const QString accentHex = accentColor.name();
   const QString accentHover = accentColor.lighter(112).name();
   const QString accentPressed = accentColor.darker(110).name();
-  const QString accentSoft = accentColor.lighter(theme->dark ? 140 : 120)
-                                 .name();
-  const bool accentIsLight = accentColor.lightness() > 170;
-  const QString selectionText =
-      accentIsLight ? crust : (theme->dark ? text : base);
+  const QString hoverBg =
+      blendColors(accentColor, QColor(surface0), 0.22).name();
+  const QString selectionBg =
+      theme->dark ? accentColor.darker(135).name() : accentHex;
+  const QString selectionText = theme->dark ? text : base;
 
   QString style;
   style += QString(
@@ -545,13 +556,17 @@ void MainWindow::applyTheme() {
   style += QString("QTreeView::item:alternate { background: %1; }\n")
                .arg(surface1);
   style += QString(
-               "QTreeView::item:selected, QListWidget::item:selected { "
-               "background: %1; color: %2; border-radius: 6px; }\n")
-               .arg(accentHex, selectionText);
+               "QTreeView::item:selected { background: %1; color: %2; }\n")
+               .arg(selectionBg, selectionText);
+  style += QString(
+               "QListWidget::item:selected { background: %1; color: %2; "
+               "border-radius: 6px; }\n")
+               .arg(selectionBg, selectionText);
   style += QString(
                "QTreeView::item:hover, QListWidget::item:hover { background: "
                "%1; }\n")
-               .arg(accentSoft);
+               .arg(hoverBg);
+  style += QString("QListWidget::item:hover { border-radius: 6px; }\n");
   style += QString(
                "QListWidget::item { padding: 6px; margin: 2px 4px; }\n");
   style += QString(

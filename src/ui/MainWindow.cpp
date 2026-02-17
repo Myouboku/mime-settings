@@ -35,6 +35,22 @@
 #include <cmath>
 
 namespace {
+QIcon makeEmojiIcon(const QString &emoji) {
+  const int size = 18;
+  QPixmap pixmap(size, size);
+  pixmap.fill(Qt::transparent);
+
+  QPainter painter(&pixmap);
+  painter.setRenderHint(QPainter::TextAntialiasing, true);
+
+  QFont font = painter.font();
+  font.setPixelSize(size - 2);
+  painter.setFont(font);
+  painter.drawText(QRect(0, 0, size, size), Qt::AlignCenter, emoji);
+
+  return QIcon(pixmap);
+}
+
 QIcon makeAccentIcon(const QColor &color) {
   QPixmap pixmap(14, 14);
   pixmap.fill(Qt::transparent);
@@ -118,6 +134,7 @@ void MainWindow::buildUi() {
   splitter->setHandleWidth(1);
 
   auto *leftPane = new QWidget(splitter);
+  leftPane->setObjectName("LeftPane");
   auto *leftLayout = new QVBoxLayout(leftPane);
   leftLayout->setContentsMargins(0, 0, 8, 0);
   leftLayout->setSpacing(10);
@@ -251,6 +268,7 @@ void MainWindow::loadPalette() {
     ThemeData theme;
     theme.id = it.key();
     theme.name = themeObj.value("name").toString(theme.id);
+    theme.emoji = themeObj.value("emoji").toString();
     theme.dark = themeObj.value("dark").toBool();
     theme.order = themeObj.value("order").toInt(0);
 
@@ -373,7 +391,11 @@ void MainWindow::populateThemePicker() {
   for (const QString &themeId : m_themeOrder) {
     const ThemeData theme = m_themes.value(themeId);
     const QString label = theme.name.isEmpty() ? themeId : theme.name;
-    m_themePicker->addItem(label, themeId);
+    if (!theme.emoji.isEmpty()) {
+      m_themePicker->addItem(makeEmojiIcon(theme.emoji), label, themeId);
+    } else {
+      m_themePicker->addItem(label, themeId);
+    }
   }
 
   int index = m_themePicker->findData(m_currentThemeId);

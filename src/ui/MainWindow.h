@@ -50,6 +50,7 @@ private:
   struct ThemeData {
     QString id;
     QString name;
+    QString emoji;
     bool dark = false;
     int order = 0;
     QHash<QString, ThemeColor> colors;

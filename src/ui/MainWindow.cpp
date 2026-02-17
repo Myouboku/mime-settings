@@ -9,6 +9,7 @@
 #include <QColor>
 #include <QComboBox>
 #include <QDir>
+#include <QEvent>
 #include <QFile>
 #include <QFont>
 #include <QHBoxLayout>
@@ -21,6 +22,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPair>
 #include <QPen>
 #include <QPixmap>
@@ -159,6 +161,7 @@ void MainWindow::buildUi() {
   m_table->setRootIsDecorated(true);
   m_table->setItemsExpandable(true);
   m_table->setExpandsOnDoubleClick(true);
+  m_table->viewport()->installEventFilter(this);
 
   leftLayout->addWidget(m_search);
   leftLayout->addWidget(m_table, 1);
@@ -479,6 +482,31 @@ QString MainWindow::colorFor(const ThemeData &theme, const QString &id,
   return fallback;
 }
 
+void MainWindow::updateViewportMask() {
+  QWidget *vp = m_table->viewport();
+  const QRectF r = vp->rect();
+  const qreal radius = 11.0;
+  QPainterPath path;
+  path.moveTo(r.topLeft());
+  path.lineTo(r.topRight());
+  path.lineTo(r.bottomRight() - QPointF(0, radius));
+  path.arcTo(
+      QRectF(r.bottomRight() - QPointF(radius * 2, radius * 2), QSizeF(radius * 2, radius * 2)), -0,
+      -90);
+  path.lineTo(r.bottomLeft() + QPointF(radius, 0));
+  path.arcTo(QRectF(r.bottomLeft() - QPointF(0, radius * 2), QSizeF(radius * 2, radius * 2)), -90,
+             -90);
+  path.closeSubpath();
+  vp->setMask(QRegion(path.toFillPolygon().toPolygon()));
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+  if (obj == m_table->viewport() && event->type() == QEvent::Resize) {
+    updateViewportMask();
+  }
+  return QMainWindow::eventFilter(obj, event);
+}
+
 void MainWindow::applyTheme() {
   const ThemeData *theme = currentTheme();
   if (!theme) {
@@ -540,9 +568,12 @@ void MainWindow::applyTheme() {
   style += QString("QTreeView, QListWidget, DetailsPane { background: %1; border: "
                    "1px solid %2; border-radius: 12px; gridline-color: %3; }\n")
                .arg(surface0, surface1, surface2);
+  style += QString("QHeaderView { border: none; border-radius: 0; background: transparent; }\n");
   style += QString("QHeaderView::section { background: %1; padding: 6px; border: "
                    "none; border-bottom: 1px solid %2; color: %3; }\n")
                .arg(surface1, surface2, subtext1);
+  style += QString("QHeaderView::section:first { border-top-left-radius: 11px; }\n");
+  style += QString("QHeaderView::section:last { border-top-right-radius: 11px; }\n");
   style += QString("QTreeView::item { padding: 6px 8px; }\n");
   style += QString("QTreeView::item:alternate { background: %1; }\n").arg(surface1);
   style += QString("QTreeView::item:has-children { background: %1; }\n").arg(groupHeaderBg);
@@ -564,6 +595,7 @@ void MainWindow::applyTheme() {
   style += QString("QPushButton:disabled { background: %1; color: %2; }\n").arg(surface2, overlay2);
   style += QString("QSplitter::handle { background: %1; }\n").arg(surface2);
   style += QString("QScrollBar:vertical { background: %1; width: 12px; margin: 0; "
+                   "border-top-right-radius: 11px; border-bottom-right-radius: 11px; "
                    "} QScrollBar::handle:vertical { background: %2; min-height: "
                    "24px; border-radius: 6px; } "
                    "QScrollBar::handle:vertical:hover { background: %3; } "

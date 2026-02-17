@@ -22,11 +22,15 @@ class MainWindow : public QMainWindow {
 public:
   explicit MainWindow(QWidget *parent = nullptr);
 
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
+
 private slots:
   void onSelectionChanged();
   void onRequestSetDefault(const QString &mime, const QString &desktopId);
 
 private:
+  void updateViewportMask();
   void buildUi();
   void loadPalette();
   void loadAppearanceSettings();
